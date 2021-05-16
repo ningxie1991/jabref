@@ -2,6 +2,8 @@ package org.jabref.logic.formatter.bibtexfields;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -17,64 +19,27 @@ class AddBracesFormatterTest {
         formatter = new AddBracesFormatter();
     }
 
-    @Test
-    public void formatAddsSingleEnclosingBraces() {
-        assertEquals("{test}", formatter.format("test"));
-    }
-
-    @Test
-    public void formatKeepsUnmatchedBracesAtBeginning() {
-        assertEquals("{test", formatter.format("{test"));
-    }
-
-    @Test
-    public void formatKeepsUnmatchedBracesAtEnd() {
-        assertEquals("test}", formatter.format("test}"));
-    }
-
-    @Test
-    public void formatKeepsShortString() {
-        assertEquals("t", formatter.format("t"));
-    }
-
-    @Test
-    public void formatKeepsEmptyString() {
-        assertEquals("", formatter.format(""));
-    }
-
-    @Test
-    public void formatKeepsDoubleEnclosingBraces() {
-        assertEquals("{{test}}", formatter.format("{{test}}"));
-    }
-
-    @Test
-    public void formatKeepsTripleEnclosingBraces() {
-        assertEquals("{{{test}}}", formatter.format("{{{test}}}"));
-    }
-
-    @Test
-    public void formatKeepsNonMatchingBraces() {
-        assertEquals("{A} and {B}", formatter.format("{A} and {B}"));
-    }
-
-    @Test
-    public void formatKeepsOnlyMatchingBraces() {
-        assertEquals("{{A} and {B}}", formatter.format("{{A} and {B}}"));
-    }
-
-    @Test
-    public void formatDoesNotRemoveBracesInBrokenString() {
-        // We opt here for a conservative approach although one could argue that "A} and {B}" is also a valid return
-        assertEquals("{A} and {B}}", formatter.format("{A} and {B}}"));
+    @ParameterizedTest(name = "input={0}, formattedStr={1}")
+    @CsvSource(value = {
+            "test, {test}", // formatAddsSingleEnclosingBraces
+            "{test, {test", // formatKeepsUnmatchedBracesAtBeginning
+            "test}, test}", // formatKeepsUnmatchedBracesAtEnd
+            "t, t", // formatKeepsShortString
+            "'', ''", // formatKeepsEmptyString
+            "{{test}}, {{test}}", // formatKeepsDoubleEnclosingBraces
+            "{{{test}}}, {{{test}}}", // formatKeepsTripleEnclosingBraces
+            "{A} and {B}, {A} and {B}", // formatKeepsNonMatchingBraces
+            "{{A} and {B}}, {{A} and {B}}", // formatKeepsOnlyMatchingBraces
+            "{A} and {B}}, {A} and {B}}", // formatDoesNotRemoveBracesInBrokenString, We opt here for a conservative approach although one could argue that "A} and {B}" is also a valid return
+            "AB, {AB}" // formatStringWithMinimalRequiredLength
+    })
+    public void testInputs(String input, String expectedResult) {
+        String formattedStr = formatter.format(input);
+        assertEquals(expectedResult, formattedStr);
     }
 
     @Test
     public void formatExample() {
         assertEquals("{In CDMA}", formatter.format(formatter.getExampleInput()));
-    }
-
-    @Test
-    public void formatStringWithMinimalRequiredLength() {
-        assertEquals("{AB}", formatter.format("AB"));
     }
 }
