@@ -1,5 +1,8 @@
 package org.jabref.logic.integrity;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -10,8 +13,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ISBNCheckerTest {
 
@@ -35,6 +37,27 @@ public class ISBNCheckerTest {
     @Test
     void isbnDoesNotAcceptInvalidInput() {
         assertNotEquals(Optional.empty(), checker.checkValue("0-201-53082-2"));
+    }
+
+    @Test
+    void fuzzTest() throws IOException {
+        int FUZZ_INPUTS = -1;
+
+        ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c","echo '0-000-00000-0' | /Users/nasdas/Developer/radamsa/radamsa/bin/radamsa -n " + FUZZ_INPUTS);
+        Process process = builder.start();
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                assertTrue(checker.checkValue(line).isEmpty() ||
+                        checker.checkValue(line).equals(Optional.of(Localization.lang("incorrect format"))) ||
+                        checker.checkValue(line).equals(Optional.of(Localization.lang("incorrect control digit")))
+                );
+                System.out.println(
+                        line
+                );
+            }
+        }
     }
 
     @ParameterizedTest
