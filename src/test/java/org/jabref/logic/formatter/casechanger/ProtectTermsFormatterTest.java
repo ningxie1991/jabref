@@ -7,6 +7,8 @@ import org.jabref.logic.protectedterms.ProtectedTermsPreferences;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -24,36 +26,23 @@ public class ProtectTermsFormatterTest {
                         Collections.emptyList(), Collections.emptyList(), Collections.emptyList())));
     }
 
-    @Test
-    public void testSingleWord() {
-        assertEquals("{VLSI}", formatter.format("VLSI"));
-    }
-
-    @Test
-    public void testDoNotProtectAlreadyProtected() {
-        assertEquals("{VLSI}", formatter.format("{VLSI}"));
-    }
-
-    @Test
-    public void testCaseSensitivity() {
-        assertEquals("VLsI", formatter.format("VLsI"));
+    @ParameterizedTest(name = "input={0}, formattedStr={1}")
+    @CsvSource(value = {
+            "VLSI, {VLSI}", // testSingleWord
+            "{VLSI}, {VLSI}", // testDoNotProtectAlreadyProtected
+            "VLsI, VLsI", // testCaseSensitivity
+            "3GPP 3G, {3GPP} {3G}", // testCorrectOrderingOfTerms
+            "VLSI {VLSI}, {VLSI} {VLSI}",
+            "{BPEL}, {BPEL}",
+            "{Testing BPEL Engine Performance: A Survey}, {Testing BPEL Engine Performance: A Survey}"
+    })
+    public void testInputs(String input, String expectedResult) {
+        String formattedStr = formatter.format(input);
+        assertEquals(expectedResult, formattedStr);
     }
 
     @Test
     public void formatExample() {
         assertEquals("In {CDMA}", formatter.format(formatter.getExampleInput()));
-    }
-
-    @Test
-    public void testCorrectOrderingOfTerms() {
-        assertEquals("{3GPP} {3G}", formatter.format("3GPP 3G"));
-    }
-
-    @Test
-    public void test() {
-        assertEquals("{VLSI} {VLSI}", formatter.format("VLSI {VLSI}"));
-        assertEquals("{BPEL}", formatter.format("{BPEL}"));
-        assertEquals("{Testing BPEL Engine Performance: A Survey}",
-                formatter.format("{Testing BPEL Engine Performance: A Survey}"));
     }
 }

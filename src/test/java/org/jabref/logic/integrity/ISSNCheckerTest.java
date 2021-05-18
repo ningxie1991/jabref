@@ -17,42 +17,24 @@ public class ISSNCheckerTest {
 
     private final ISSNChecker checker = new ISSNChecker();
 
-    @Test
-    void issnAcceptsValidInput() {
-        assertEquals(Optional.empty(), checker.checkValue("0020-7217"));
-    }
-
-    @Test
-    void issnAcceptsNumbersAndCharacters() {
-        assertEquals(Optional.empty(), checker.checkValue("2434-561x"));
-    }
-
-    @Test
-    void issnDoesNotAcceptRandomInput() {
-        assertNotEquals(Optional.empty(), checker.checkValue("Some other stuff"));
-    }
-
-    @Test
-    void issnDoesNotAcceptInvalidInput() {
-        assertNotEquals(Optional.empty(), checker.checkValue("0020-7218"));
-    }
-
-    @Test
-    void emptyIssnValue() {
-        assertEquals(Optional.empty(), checker.checkValue(""));
-    }
-
     @ParameterizedTest
-    @MethodSource("provideIncorrectFormatArguments")
-    public void issnWithWrongFormat(String wrongISSN) {
-        assertEquals(Optional.of(Localization.lang("incorrect format")), checker.checkValue(wrongISSN));
+    @MethodSource("provideISSN")
+    public void checkISSN(Optional optValue, String providedISSN) {
+        assertEquals(optValue, checker.checkValue(providedISSN));
     }
 
-    private static Stream<Arguments> provideIncorrectFormatArguments() {
+    private static Stream<Arguments> provideISSN() {
         return Stream.of(
-                Arguments.of("020-721"),
-                Arguments.of("0020-72109"),
-                Arguments.of("0020~72109")
+                // valid ISSN
+                Arguments.of(Optional.empty(), "0020-7217"),
+                Arguments.of(Optional.empty(), "2434-561x"),
+                Arguments.of(Optional.empty(), ""),
+                // invalid issn
+                Arguments.of(Optional.of(Localization.lang("incorrect format")), "020-721"),
+                Arguments.of(Optional.of(Localization.lang("incorrect format")), "0020-72109"),
+                Arguments.of(Optional.of(Localization.lang("incorrect format")), "0020~72109"),
+                Arguments.of(Optional.of(Localization.lang("incorrect format")), "Some other stuff"),
+                Arguments.of(Optional.of(Localization.lang("incorrect control digit")), "0020-7218")
         );
     }
 
