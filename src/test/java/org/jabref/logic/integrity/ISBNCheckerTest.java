@@ -13,7 +13,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ISBNCheckerTest {
 
@@ -43,7 +45,7 @@ public class ISBNCheckerTest {
     void fuzzTest() throws IOException {
         int FUZZ_INPUTS = -1;
 
-        ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c","echo '0-000-00000-0' | /Users/nasdas/Developer/radamsa/radamsa/bin/radamsa -n " + FUZZ_INPUTS);
+        ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c", "echo '0-000-00000-0' | /Users/nasdas/Developer/radamsa/radamsa/bin/radamsa -n " + FUZZ_INPUTS);
         Process process = builder.start();
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {

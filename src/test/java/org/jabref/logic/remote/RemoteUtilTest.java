@@ -1,10 +1,10 @@
 package org.jabref.logic.remote;
 
+import java.util.stream.Stream;
+
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -12,7 +12,7 @@ public class RemoteUtilTest {
 
     @ParameterizedTest
     @MethodSource("remoteUtilArguments")
-    void remoteUtilTests(int userPort, boolean acceptPort){
+    void remoteUtilTests(int userPort, boolean acceptPort) {
         assertEquals(acceptPort, RemoteUtil.isUserPort(userPort));
     }
 
