@@ -1,64 +1,59 @@
 package org.jabref.logic.openoffice;
 
-import org.junit.jupiter.api.Test;
+import java.util.stream.Stream;
+
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class OOPreFormatterTest {
+    OOPreFormatter formatter = new OOPreFormatter();
 
-    @Test
-    public void testPlainFormat() {
-        assertEquals("aaa", new OOPreFormatter().format("aaa"));
-        assertEquals("$", new OOPreFormatter().format("\\$"));
-        assertEquals("%", new OOPreFormatter().format("\\%"));
-        assertEquals("\\", new OOPreFormatter().format("\\\\"));
+    @ParameterizedTest
+    @MethodSource("preFormatterTestArguments")
+    void preFormatterTest(String expectedString, String inputString) {
+        assertEquals(expectedString, formatter.format(inputString));
     }
 
-    @Test
-    public void testFormatAccents() {
-        assertEquals("ä", new OOPreFormatter().format("{\\\"{a}}"));
-        assertEquals("Ä", new OOPreFormatter().format("{\\\"{A}}"));
-        assertEquals("Ç", new OOPreFormatter().format("{\\c{C}}"));
-    }
-
-    @Test
-    public void testSpecialCommands() {
-        assertEquals("å", new OOPreFormatter().format("{\\aa}"));
-        assertEquals("bb", new OOPreFormatter().format("{\\bb}"));
-        assertEquals("å a", new OOPreFormatter().format("\\aa a"));
-        assertEquals("å a", new OOPreFormatter().format("{\\aa a}"));
-        assertEquals("åÅ", new OOPreFormatter().format("\\aa\\AA"));
-        assertEquals("bb a", new OOPreFormatter().format("\\bb a"));
-    }
-
-    @Test
-    public void testUnsupportedSpecialCommands() {
-        assertEquals("ftmch", new OOPreFormatter().format("\\ftmch"));
-        assertEquals("ftmch", new OOPreFormatter().format("{\\ftmch}"));
-        assertEquals("ftmchaaa", new OOPreFormatter().format("{\\ftmch\\aaa}"));
-    }
-
-    @Test
-    public void testEquations() {
-        assertEquals("Σ", new OOPreFormatter().format("$\\Sigma$"));
-    }
-
-    @Test
-    public void testFormatStripLatexCommands() {
-        assertEquals("-", new OOPreFormatter().format("\\mbox{-}"));
-    }
-
-    @Test
-    public void testFormatting() {
-        assertEquals("<i>kkk</i>", new OOPreFormatter().format("\\textit{kkk}"));
-        assertEquals("<i>kkk</i>", new OOPreFormatter().format("{\\it kkk}"));
-        assertEquals("<i>kkk</i>", new OOPreFormatter().format("\\emph{kkk}"));
-        assertEquals("<b>kkk</b>", new OOPreFormatter().format("\\textbf{kkk}"));
-        assertEquals("<smallcaps>kkk</smallcaps>", new OOPreFormatter().format("\\textsc{kkk}"));
-        assertEquals("<s>kkk</s>", new OOPreFormatter().format("\\sout{kkk}"));
-        assertEquals("<u>kkk</u>", new OOPreFormatter().format("\\underline{kkk}"));
-        assertEquals("<tt>kkk</tt>", new OOPreFormatter().format("\\texttt{kkk}"));
-        assertEquals("<sup>kkk</sup>", new OOPreFormatter().format("\\textsuperscript{kkk}"));
-        assertEquals("<sub>kkk</sub>", new OOPreFormatter().format("\\textsubscript{kkk}"));
+    private static Stream<Arguments> preFormatterTestArguments() {
+        return Stream.of(
+                // plain format
+                Arguments.of("aaa", "aaa"),
+                Arguments.of("$", "\\$"),
+                Arguments.of("%", "\\%"),
+                Arguments.of("\\", "\\\\"),
+                // accent format
+                Arguments.of("ä", "{\\\"{a}}"),
+                Arguments.of("Ä", "{\\\"{A}}"),
+                Arguments.of("Ç", "{\\c{C}}"),
+                // special commands
+                Arguments.of("å", "{\\aa}"),
+                Arguments.of("bb", "{\\bb}"),
+                Arguments.of("å a", "\\aa a"),
+                Arguments.of("å a", "{\\aa a}"),
+                Arguments.of("åÅ", "\\aa\\AA"),
+                Arguments.of("bb a", "\\bb a"),
+                // unsupported special commands
+                Arguments.of("ftmch", "\\ftmch"),
+                Arguments.of("ftmch", "{\\ftmch}"),
+                Arguments.of("ftmchaaa", "{\\ftmch\\aaa}"),
+                // equations
+                Arguments.of("Σ", "$\\Sigma$"),
+                // strip latex commands
+                Arguments.of("-", "\\mbox{-}"),
+                // general formatting
+                Arguments.of("<i>kkk</i>", "\\textit{kkk}"),
+                Arguments.of("<i>kkk</i>", "{\\it kkk}"),
+                Arguments.of("<i>kkk</i>", "\\emph{kkk}"),
+                Arguments.of("<b>kkk</b>", "\\textbf{kkk}"),
+                Arguments.of("<smallcaps>kkk</smallcaps>", "\\textsc{kkk}"),
+                Arguments.of("<s>kkk</s>", "\\sout{kkk}"),
+                Arguments.of("<u>kkk</u>", "\\underline{kkk}"),
+                Arguments.of("<tt>kkk</tt>", "\\texttt{kkk}"),
+                Arguments.of("<sup>kkk</sup>", "\\textsuperscript{kkk}"),
+                Arguments.of("<sub>kkk</sub>", "\\textsubscript{kkk}")
+                );
     }
 }
