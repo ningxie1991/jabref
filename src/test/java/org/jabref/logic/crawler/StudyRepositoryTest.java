@@ -32,6 +32,7 @@ import org.jabref.model.study.QueryResult;
 import org.jabref.model.util.DummyFileUpdateMonitor;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Answers;
@@ -43,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@Disabled
 class StudyRepositoryTest {
     private static final String NON_EXISTING_DIRECTORY = "nonExistingTestRepositoryDirectory";
     CitationKeyPatternPreferences citationKeyPatternPreferences;

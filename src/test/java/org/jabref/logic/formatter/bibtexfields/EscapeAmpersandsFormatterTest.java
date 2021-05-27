@@ -28,4 +28,9 @@ class EscapeAmpersandsFormatterTest {
     void formatExample() {
         assertEquals("Text \\& with \\&ampersands", formatter.format(formatter.getExampleInput()));
     }
+
+    @Test
+    void test() {
+        assertEquals("\\c", formatter.format("\\c"));
+    }
 }

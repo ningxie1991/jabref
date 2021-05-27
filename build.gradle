@@ -35,13 +35,26 @@ plugins {
     id 'project-report'
 
     id 'idea'
+    id 'info.solidsoft.pitest' version '1.5.2'
+}
+
+pitest {
+    //adds dependency to org.pitest:pitest-junit5-plugin and sets "testPlugin" to "junit5"
+    junit5PluginVersion = '0.14'
+    targetClasses = ['org.jabref.logic.integrity.*']  //by default "${project.group}.*"
+    targetTests = ['org.jabref.logic.integrity.*Test']
+    pitestVersion = '1.5.2' //not needed when a default PIT version should be used
+    threads = 4
+    outputFormats = ['XML', 'HTML']
+    timestampedReports = false
+    verbose = true
 }
 
 // Enable following for debugging
 // gradle.startParameter.showStacktrace = org.gradle.api.logging.configuration.ShowStacktrace.
 
 apply plugin: XjcPlugin
-
+apply plugin: "info.solidsoft.pitest"
 apply from: 'eclipse.gradle'
 
 group = "org.jabref"
@@ -96,6 +109,7 @@ repositories {
     mavenCentral()
     maven { url 'https://oss.sonatype.org/content/groups/public' }
     maven { url 'https://repository.apache.org/snapshots' }
+    mavenCentral()
 }
 
 configurations {
@@ -117,6 +131,8 @@ javafx {
 dependencies {
     // Include all jar-files in the 'lib' folder as dependencies
     implementation fileTree(dir: 'lib', includes: ['*.jar'])
+
+    implementation 'info.solidsoft.gradle.pitest:gradle-pitest-plugin:1.5.2'
 
     implementation 'org.apache.pdfbox:pdfbox:2.0.23'
     implementation 'org.apache.pdfbox:fontbox:2.0.23'
@@ -229,6 +245,7 @@ dependencies {
     testImplementation "org.testfx:testfx-core:4.0.17-alpha-SNAPSHOT"
     testImplementation "org.testfx:testfx-junit5:4.0.17-alpha-SNAPSHOT"
     testImplementation "org.hamcrest:hamcrest-library:2.2"
+    testImplementation group: 'ch.qos.logback', name: 'logback-classic', version: '0.9.26'
 
     checkstyle 'com.puppycrawl.tools:checkstyle:8.42'
     xjc group: 'org.glassfish.jaxb', name: 'jaxb-xjc', version: '2.3.3'
@@ -293,7 +310,7 @@ processResources {
     filesMatching("build.properties") {
         expand(version: project.findProperty('projVersionInfo') ?: '100.0.0',
                 "year": String.valueOf(Calendar.getInstance().get(Calendar.YEAR)),
-                "maintainers": new File('MAINTAINERS').readLines().findAll { !it.startsWith("#") }.join(", "),
+                "maintainers": "Oliver Kopp (since 2011)",
                 "azureInstrumentationKey": System.getenv('AzureInstrumentationKey') ? System.getenv('AzureInstrumentationKey') : '',
                 "springerNatureAPIKey": System.getenv('SpringerNatureAPIKey') ? System.getenv('SpringerNatureAPIKey') : '',
                 "astrophysicsDataSystemAPIKey": System.getenv('AstrophysicsDataSystemAPIKey') ? System.getenv('AstrophysicsDataSystemAPIKey') : '',

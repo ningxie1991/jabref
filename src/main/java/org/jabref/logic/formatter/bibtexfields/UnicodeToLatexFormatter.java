@@ -59,7 +59,7 @@ public class UnicodeToLatexFormatter extends Formatter implements LayoutFormatte
         // Check if any symbols is not converted
         for (int i = 0; i <= (result.length() - 1); i++) {
             int cp = result.codePointAt(i);
-            if (cp >= 129) {
+             if (cp >= 129) {
                 LOGGER.warn("Unicode character not converted: " + cp);
             }
         }
