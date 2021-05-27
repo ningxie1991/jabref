@@ -19,6 +19,7 @@ public class NoBibtexFieldChecker implements EntryChecker {
 
     private Set<Field> getAllBiblatexOnlyFields() {
         Set<BibField> allBibtexFields = BibtexEntryTypeDefinitions.ALL.stream().flatMap(type -> type.getAllBibFields().stream()).collect(Collectors.toSet());
+
         return BiblatexEntryTypeDefinitions.ALL.stream()
                                                .flatMap(type -> type.getAllBibFields().stream())
                                                .filter(field -> !allBibtexFields.contains(field))
