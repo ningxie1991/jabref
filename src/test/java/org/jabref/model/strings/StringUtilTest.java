@@ -6,6 +6,8 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -25,95 +27,97 @@ class StringUtilTest {
                 + "Thus think twice if you add something to StringUtil.");
     }
 
-    @Test
-    void testBooleanToBinaryString() {
-        assertEquals("0", StringUtil.booleanToBinaryString(false));
-        assertEquals("1", StringUtil.booleanToBinaryString(true));
+    @ParameterizedTest(name = "expectedResult={0}, booleanValue={1}")
+    @CsvSource({
+            "0, FALSE",
+            "1, TRUE"
+    })
+    void testBooleanToBinaryString(String expectedResult, boolean booleanValue) {
+        assertEquals(expectedResult, StringUtil.booleanToBinaryString(booleanValue));
     }
 
-    @Test
-    void testQuoteSimple() {
-        assertEquals("a::", StringUtil.quote("a:", "", ':'));
+    @ParameterizedTest(name = "expectedResult={0}, toQuote={1}, specials={2}, quoteChar={3}")
+    @CsvSource({
+            "'a::', 'a:', '', ':'", // simple
+            "'a::', 'a:', , ':'", // null quotation
+            "'', , ';', ':'", // null string
+            "'a:::;', 'a:;', ';', ':'", // quotation character
+            "'a::b:%c:;', 'a:b%c;', '%;', ':'" // more complicated
+    })
+    void testQuote(String expectedResult, String toQuote, String specials, char quoteChar) {
+        assertEquals(expectedResult, StringUtil.quote(toQuote, specials, quoteChar));
     }
 
-    @Test
-    void testQuoteNullQuotation() {
-        assertEquals("a::", StringUtil.quote("a:", null, ':'));
+    @ParameterizedTest(name = "expectedResult={0}, toQuote={1}, specials={2}, quoteChar={3}")
+    @CsvSource({
+            "newline, '\r', newline", // Mac < v9
+            "newline, '\r\n', newline", // Windows
+            "newline, '\n', newline" // Unix
+    })
+    void testUnifyLineBreaks(String expectedResult, String s, String newline) {
+
+        assertEquals(expectedResult, StringUtil.unifyLineBreaks(s, newline));
     }
 
-    @Test
-    void testQuoteNullString() {
-        assertEquals("", StringUtil.quote(null, ";", ':'));
+    @ParameterizedTest(name = "expectedResult={0}, toQuote={1}, specials={2}, quoteChar={3}")
+    @CsvSource({
+            "aa.bib, aa, bib",
+            ".login.bib, .login, bib",
+            "a.bib, a.bib, bib",
+            "a.bib, a.bib, BIB",
+            "a.bib, a, bib",
+            "a.bb, a.bb, bib",
+            "'', , bib"
+    })
+    void testGetCorrectFileName(String expectedResult, String orgName, String defaultExtension) {
+        assertEquals(expectedResult, StringUtil.getCorrectFileName(orgName, defaultExtension));
     }
 
-    @Test
-    void testQuoteQuotationCharacter() {
-        assertEquals("a:::;", StringUtil.quote("a:;", ";", ':'));
+    @ParameterizedTest(name = "expectedResult={0}, toQuote={1}")
+    @CsvSource({
+            "'&#33;', !",
+            "'&#33;&#33;&#33;', !!!"
+    })
+    void testQuoteForHTML(String expectedResult, String toQuote) {
+        assertEquals(expectedResult, StringUtil.quoteForHTML(toQuote));
     }
 
-    @Test
-    void testQuoteMoreComplicated() {
-        assertEquals("a::b:%c:;", StringUtil.quote("a:b%c;", "%;", ':'));
+    @ParameterizedTest(name = "expectedResult={0}, s={1}")
+    @CsvSource({
+            "ABC, {ABC}",
+            "ABC, {{ABC}}",
+            "{abc}, {abc}",
+            "ABCDEF, {ABC}{DEF}"
+    })
+    void testRemoveBracesAroundCapitals(String expectedResult, String s) {
+        assertEquals(expectedResult, StringUtil.removeBracesAroundCapitals(s));
     }
 
-    @Test
-    void testUnifyLineBreaks() {
-        // Mac < v9
-        String result = StringUtil.unifyLineBreaks("\r", "newline");
-        assertEquals("newline", result);
-        // Windows
-        result = StringUtil.unifyLineBreaks("\r\n", "newline");
-        assertEquals("newline", result);
-        // Unix
-        result = StringUtil.unifyLineBreaks("\n", "newline");
-        assertEquals("newline", result);
+    @ParameterizedTest(name = "expectedResult={0}, s={1}")
+    @CsvSource({
+            "{ABC}, ABC",
+            "{ABC}, {ABC}",
+            "abc, abc",
+            "'#ABC#', '#ABC#'",
+            "'{ABC} def {EFG}', 'ABC def EFG'"
+    })
+    void testPutBracesAroundCapitals(String expectedResult, String s) {
+        assertEquals(expectedResult, StringUtil.putBracesAroundCapitals(s));
     }
 
-    @Test
-    void testGetCorrectFileName() {
-        assertEquals("aa.bib", StringUtil.getCorrectFileName("aa", "bib"));
-        assertEquals(".login.bib", StringUtil.getCorrectFileName(".login", "bib"));
-        assertEquals("a.bib", StringUtil.getCorrectFileName("a.bib", "bib"));
-        assertEquals("a.bib", StringUtil.getCorrectFileName("a.bib", "BIB"));
-        assertEquals("a.bib", StringUtil.getCorrectFileName("a", "bib"));
-        assertEquals("a.bb", StringUtil.getCorrectFileName("a.bb", "bib"));
-        assertEquals("", StringUtil.getCorrectFileName(null, "bib"));
-    }
-
-    @Test
-    void testQuoteForHTML() {
-        assertEquals("&#33;", StringUtil.quoteForHTML("!"));
-        assertEquals("&#33;&#33;&#33;", StringUtil.quoteForHTML("!!!"));
-    }
-
-    @Test
-    void testRemoveBracesAroundCapitals() {
-        assertEquals("ABC", StringUtil.removeBracesAroundCapitals("{ABC}"));
-        assertEquals("ABC", StringUtil.removeBracesAroundCapitals("{{ABC}}"));
-        assertEquals("{abc}", StringUtil.removeBracesAroundCapitals("{abc}"));
-        assertEquals("ABCDEF", StringUtil.removeBracesAroundCapitals("{ABC}{DEF}"));
-    }
-
-    @Test
-    void testPutBracesAroundCapitals() {
-        assertEquals("{ABC}", StringUtil.putBracesAroundCapitals("ABC"));
-        assertEquals("{ABC}", StringUtil.putBracesAroundCapitals("{ABC}"));
-        assertEquals("abc", StringUtil.putBracesAroundCapitals("abc"));
-        assertEquals("#ABC#", StringUtil.putBracesAroundCapitals("#ABC#"));
-        assertEquals("{ABC} def {EFG}", StringUtil.putBracesAroundCapitals("ABC def EFG"));
-    }
-
-    @Test
-    void testShaveString() {
-
-        assertEquals("", StringUtil.shaveString(null));
-        assertEquals("", StringUtil.shaveString(""));
-        assertEquals("aaa", StringUtil.shaveString("   aaa\t\t\n\r"));
-        assertEquals("a", StringUtil.shaveString("  {a}    "));
-        assertEquals("a", StringUtil.shaveString("  \"a\"    "));
-        assertEquals("{a}", StringUtil.shaveString("  {{a}}    "));
-        assertEquals("{a}", StringUtil.shaveString("  \"{a}\"    "));
-        assertEquals("\"{a\"}", StringUtil.shaveString("  \"{a\"}    "));
+    @ParameterizedTest(name = "expectedResult={0}, toShave={1}")
+    @CsvSource({
+            "'', ",
+            "'', ''",
+            "aaa, '   aaa\t\t\n\r'",
+            "a, '  \"a\"    '",
+            "a, '  {a}    '",
+            "{a}, '  {{a}}    '",
+            "{a}, '  \"{a}\"    '",
+            "\"{a\"}, '  \"{a\"}    '",
+    })
+    void testShaveString(String expectedResult, String toShave) {
+        assertEquals(expectedResult, StringUtil.shaveString(toShave));
     }
 
     @Test
