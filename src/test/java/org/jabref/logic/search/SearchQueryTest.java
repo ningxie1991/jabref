@@ -8,6 +8,8 @@ import org.jabref.model.entry.field.StandardField;
 import org.jabref.model.entry.types.StandardEntryType;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -15,24 +17,41 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SearchQueryTest {
 
-    @Test
-    public void testToString() {
-        assertEquals("\"asdf\" (case sensitive, regular expression)", new SearchQuery("asdf", true, true).toString());
-        assertEquals("\"asdf\" (case insensitive, plain text)", new SearchQuery("asdf", false, false).toString());
+    @ParameterizedTest(name = "expectedResult={0}, query={1}, caseSensitive={2}, regularExpression={3}")
+    @CsvSource({
+            "'\"asdf\" (case sensitive, regular expression)', asdf, TRUE, TRUE",
+            "'\"asdf\" (case insensitive, plain text)', asdf, FALSE, FALSE"
+    })
+    public void testToString(String expectedResult, String query, boolean caseSensitive, boolean regularExpression) {
+        assertEquals(expectedResult, new SearchQuery(query, caseSensitive, regularExpression).toString());
     }
 
-    @Test
-    public void testIsContainsBasedSearch() {
-        assertTrue(new SearchQuery("asdf", true, false).isContainsBasedSearch());
-        assertTrue(new SearchQuery("asdf", true, true).isContainsBasedSearch());
-        assertFalse(new SearchQuery("author=asdf", true, false).isContainsBasedSearch());
+    @ParameterizedTest(name = "assertTrue={0}, query={1}, caseSensitive={2}, regularExpression={3}")
+    @CsvSource({
+            "TRUE, asdf, TRUE, FALSE",
+            "TRUE, asdf, TRUE, TRUE",
+            "FALSE, author=asdf, TRUE, FALSE"
+    })
+    public void testIsContainsBasedSearch(boolean assertTrue, String query, boolean caseSensitive, boolean regularExpression) {
+        if(assertTrue) {
+            assertTrue(new SearchQuery(query, caseSensitive, regularExpression).isContainsBasedSearch());
+        }else {
+            assertFalse(new SearchQuery(query, caseSensitive, regularExpression).isContainsBasedSearch());
+        }
     }
 
-    @Test
-    public void testIsGrammarBasedSearch() {
-        assertFalse(new SearchQuery("asdf", true, false).isGrammarBasedSearch());
-        assertFalse(new SearchQuery("asdf", true, true).isGrammarBasedSearch());
-        assertTrue(new SearchQuery("author=asdf", true, false).isGrammarBasedSearch());
+    @ParameterizedTest(name = "assertTrue={0}, query={1}, caseSensitive={2}, regularExpression={3}")
+    @CsvSource({
+            "FALSE, asdf, TRUE, FALSE",
+            "FALSE, asdf, TRUE, TRUE",
+            "TRUE, author=asdf, TRUE, FALSE"
+    })
+    public void testIsGrammarBasedSearch(boolean assertTrue, String query, boolean caseSensitive, boolean regularExpression) {
+        if(assertTrue) {
+            assertTrue(new SearchQuery(query, caseSensitive, regularExpression).isGrammarBasedSearch());
+        }else {
+            assertFalse(new SearchQuery(query, caseSensitive, regularExpression).isGrammarBasedSearch());
+        }
     }
 
     @Test
@@ -127,54 +146,22 @@ public class SearchQueryTest {
         assertTrue(new SearchQuery("author=asdf", true, true).isMatch(entry));
     }
 
-    @Test
-    public void testIsValidQueryNotAsRegEx() {
-        assertTrue(new SearchQuery("asdf", true, false).isValid());
-    }
-
-    @Test
-    public void testIsValidQueryContainsBracketNotAsRegEx() {
-        assertTrue(new SearchQuery("asdf[", true, false).isValid());
-    }
-
-    @Test
-    public void testIsNotValidQueryContainsBracketNotAsRegEx() {
-        assertTrue(new SearchQuery("asdf[", true, true).isValid());
-    }
-
-    @Test
-    public void testIsValidQueryAsRegEx() {
-        assertTrue(new SearchQuery("asdf", true, true).isValid());
-    }
-
-    @Test
-    public void testIsValidQueryWithNumbersAsRegEx() {
-        assertTrue(new SearchQuery("123", true, true).isValid());
-    }
-
-    @Test
-    public void testIsValidQueryContainsBracketAsRegEx() {
-        assertTrue(new SearchQuery("asdf[", true, true).isValid());
-    }
-
-    @Test
-    public void testIsValidQueryWithEqualSignAsRegEx() {
-        assertTrue(new SearchQuery("author=asdf", true, true).isValid());
-    }
-
-    @Test
-    public void testIsValidQueryWithNumbersAndEqualSignAsRegEx() {
-        assertTrue(new SearchQuery("author=123", true, true).isValid());
-    }
-
-    @Test
-    public void testIsValidQueryWithEqualSignNotAsRegEx() {
-        assertTrue(new SearchQuery("author=asdf", true, false).isValid());
-    }
-
-    @Test
-    public void testIsValidQueryWithNumbersAndEqualSignNotAsRegEx() {
-        assertTrue(new SearchQuery("author=123", true, false).isValid());
+    @ParameterizedTest(name = "assertTrue={0}, query={1}, caseSensitive={2}, regularExpression={3}")
+    @CsvSource({
+            "TRUE, asdf, TRUE, FALSE", // not as regex
+            "TRUE, asdf[, TRUE, FALSE", // contains bracket not as regex
+            "TRUE, asdf[, TRUE, TRUE", // contains bracket not as regex
+            "TRUE, asdf, TRUE, TRUE", // valid query as regex
+            "TRUE, 123, TRUE, TRUE", // valid query with numbers as regex
+            "TRUE, author=asdf, TRUE, TRUE", // valid query with equal sign as regex
+            "TRUE, author=123, TRUE, TRUE", // valid query with numbers and equal sign as regex
+    })
+    public void testIsValidQuery(boolean assertTrue, String query, boolean caseSensitive, boolean regularExpression) {
+        if(assertTrue) {
+            assertTrue(new SearchQuery(query, caseSensitive, regularExpression).isValid());
+        }else {
+            assertFalse(new SearchQuery(query, caseSensitive, regularExpression).isValid());
+        }
     }
 
     @Test
