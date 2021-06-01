@@ -4,6 +4,8 @@ import org.jabref.model.entry.AuthorList;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -36,44 +38,42 @@ public class BibtexNameFormatterTest {
                 .getAuthor(0), "{vv~}{ll}{, jj}{, f}?", Assertions::fail));
     }
 
-    @Test
-    public void testFormatName() {
-        AuthorList al = AuthorList
-                .parse("Charles Louis Xavier Joseph de la Vall{\\'e}e Poussin");
-
-        assertEquals("dlVP", BibtexNameFormatter.formatName(al.getAuthor(0), "{v{}}{l{}}",
-                Assertions::fail));
-
-        assertNameFormatA("Meyer, J?", "Jonathan Meyer and Charles Louis Xavier Joseph de la Vall{\\'e}e Poussin");
-        assertNameFormatB("J.~Meyer", "Jonathan Meyer and Charles Louis Xavier Joseph de la Vall{\\'e}e Poussin");
-        assertNameFormatC("Jonathan Meyer", "Jonathan Meyer and Charles Louis Xavier Joseph de la Vall{\\'e}e Poussin");
-        assertNameFormatA("Masterly, {\\'{E}}?", "{\\'{E}}douard Masterly");
-        assertNameFormatB("{\\'{E}}.~Masterly", "{\\'{E}}douard Masterly");
-        assertNameFormatC("{\\'{E}}douard Masterly", "{\\'{E}}douard Masterly");
-        assertNameFormatA("{\\\"{U}}nderwood, U?", "Ulrich {\\\"{U}}nderwood and Ned {\\~N}et and Paul {\\={P}}ot");
-        assertNameFormatB("U.~{\\\"{U}}nderwood", "Ulrich {\\\"{U}}nderwood and Ned {\\~N}et and Paul {\\={P}}ot");
-        assertNameFormatC("Ulrich {\\\"{U}}nderwood", "Ulrich {\\\"{U}}nderwood and Ned {\\~N}et and Paul {\\={P}}ot");
-        assertNameFormatA("Victor, P.~{\\'E}?", "Paul {\\'E}mile Victor and and de la Cierva y Codorn{\\’\\i}u, Juan");
-        assertNameFormatB("P.~{\\'E}. Victor", "Paul {\\'E}mile Victor and and de la Cierva y Codorn{\\’\\i}u, Juan");
-        assertNameFormatC("Paul~{\\'E}mile Victor",
-                "Paul {\\'E}mile Victor and and de la Cierva y Codorn{\\’\\i}u, Juan");
-    }
-
     private void assertNameFormat(String string, String string2, int which, String format) {
         assertEquals(string, BibtexNameFormatter.formatName(string2, which, format,
                 Assertions::fail));
     }
 
-    private void assertNameFormatC(String string, String string2) {
-        assertNameFormat(string, string2, 1, "{ff }{vv }{ll}{ jj}");
+    @ParameterizedTest(name = "string={0}, string2={1}")
+    @CsvSource({
+            "'Meyer, J?', 'Jonathan Meyer and Charles Louis Xavier Joseph de la Vall{\\'e}e Poussin'",
+            "'Masterly, {\\'{E}}?', '{\\'{E}}douard Masterly'",
+            "'{\\\"{U}}nderwood, U?', 'Ulrich {\\\"{U}}nderwood and Ned {\\~N}et and Paul {\\={P}}ot'",
+            "'Victor, P.~{\\\\'E}?', 'Paul {\\'E}mile Victor and and de la Cierva y Codorn{\\’\\i}u, Juan'"
+    })
+    public void assertNameFormatA(String string, String string2) {
+        assertNameFormat(string, string2, 1, "{vv~}{ll}{, jj}{, f}?");
     }
 
-    private void assertNameFormatB(String string, String string2) {
+    @ParameterizedTest(name = "string={0}, string2={1}")
+    @CsvSource({
+            "'J.~Meyer', 'Jonathan Meyer and Charles Louis Xavier Joseph de la Vall{\\'e}e Poussin'",
+            "'{\\'{E}}.~Masterly', '{\\'{E}}douard Masterly'",
+            "'U.~{\\\"{U}}nderwood', 'Ulrich {\\\"{U}}nderwood and Ned {\\~N}et and Paul {\\={P}}ot'",
+            "'P.~{\\'E}. Victor', 'Paul {\\'E}mile Victor and and de la Cierva y Codorn{\\’\\i}u, Juan'"
+    })
+    public void assertNameFormatB(String string, String string2) {
         assertNameFormat(string, string2, 1, "{f.~}{vv~}{ll}{, jj}");
     }
 
-    private void assertNameFormatA(String string, String string2) {
-        assertNameFormat(string, string2, 1, "{vv~}{ll}{, jj}{, f}?");
+    @ParameterizedTest(name = "string={0}, string2={1}")
+    @CsvSource({
+            "'Jonathan Meyer', 'Jonathan Meyer and Charles Louis Xavier Joseph de la Vall{\\'e}e Poussin'",
+            "'{\\'{E}}douard Masterly', '{\\'{E}}douard Masterly'",
+            "'Ulrich {\\\"{U}}nderwood', 'Ulrich {\\\"{U}}nderwood and Ned {\\~N}et and Paul {\\={P}}ot'",
+            "'Paul~{\\'E}mile Victor', 'Paul {\\'E}mile Victor and and de la Cierva y Codorn{\\’\\i}u, Juan'"
+    })
+    public void assertNameFormatC(String string, String string2) {
+        assertNameFormat(string, string2, 1, "{ff }{vv }{ll}{ jj}");
     }
 
     @Test
