@@ -35,6 +35,11 @@ class RemoveLatexCommandsFormatterTest {
     }
 
     @Test
+    public void multipleSpacesAfterMultipleCommandRemoved() {
+        assertEquals("text", formatter.format("\\some   \\some    text"));
+    }
+
+    @Test
     public void escapedBackslashBecomesBackslash() {
         assertEquals("\\", formatter.format("\\\\"));
     }
