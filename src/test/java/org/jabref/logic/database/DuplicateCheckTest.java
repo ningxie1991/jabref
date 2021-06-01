@@ -1,5 +1,8 @@
 package org.jabref.logic.database;
 
+import java.util.Optional;
+import java.util.stream.Stream;
+
 import org.jabref.model.database.BibDatabaseMode;
 import org.jabref.model.entry.BibEntry;
 import org.jabref.model.entry.BibEntryTypesManager;
@@ -9,6 +12,10 @@ import org.jabref.model.entry.types.StandardEntryType;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -48,60 +55,177 @@ public class DuplicateCheckTest {
         duplicateChecker = new DuplicateCheck(new BibEntryTypesManager());
     }
 
-    @Test
-    public void testDuplicateDetection() {
-        BibEntry one = new BibEntry(StandardEntryType.Article);
+    private static Stream<Arguments> getBibEntryPairs() {
+        return Stream.of(
+                // same entry type with same author
+                Arguments.of(true, new BibEntry(StandardEntryType.Article).withField(StandardField.AUTHOR, "Billy Bob"),
+                        new BibEntry(StandardEntryType.Article).withField(StandardField.AUTHOR, "Billy Bob")),
+                // different entry types with same author
+                Arguments.of(false, new BibEntry(StandardEntryType.Article).withField(StandardField.AUTHOR, "Billy Bob"),
+                        new BibEntry(StandardEntryType.Book).withField(StandardField.AUTHOR, "Billy Bob")),
+                // duplicate entries with more fields
+                Arguments.of(true, new BibEntry(StandardEntryType.Article)
+                                            .withField(StandardField.AUTHOR, "Billy Bob")
+                                            .withField(StandardField.YEAR, "2005")
+                                            .withField(StandardField.TITLE, "A title")
+                                            .withField(StandardField.JOURNAL, "A"),
+                                    new BibEntry(StandardEntryType.Article)
+                                            .withField(StandardField.AUTHOR, "Billy Bob")
+                                            .withField(StandardField.YEAR, "2005")
+                                            .withField(StandardField.TITLE, "A title")
+                                            .withField(StandardField.JOURNAL, "A")),
+                // different JOURNAL value
+                Arguments.of(true, new BibEntry(StandardEntryType.Article)
+                                            .withField(StandardField.AUTHOR, "Billy Bob")
+                                            .withField(StandardField.YEAR, "2005")
+                                            .withField(StandardField.TITLE, "A title")
+                                            .withField(StandardField.JOURNAL, "A"),
+                                    new BibEntry(StandardEntryType.Article)
+                                            .withField(StandardField.AUTHOR, "Billy Bob")
+                                            .withField(StandardField.YEAR, "2005")
+                                            .withField(StandardField.TITLE, "A title")
+                                            .withField(StandardField.JOURNAL, "B")),
+                // entryOne has NUMBER and entryTwo has VOLUME and both have same PAGES
+                Arguments.of(true, new BibEntry(StandardEntryType.Article)
+                                .withField(StandardField.AUTHOR, "Billy Bob")
+                                .withField(StandardField.YEAR, "2005")
+                                .withField(StandardField.TITLE, "A title")
+                                .withField(StandardField.JOURNAL, "A")
+                                .withField(StandardField.NUMBER, "1")
+                                .withField(StandardField.PAGES, "334--337"),
+                        new BibEntry(StandardEntryType.Article)
+                                .withField(StandardField.AUTHOR, "Billy Bob")
+                                .withField(StandardField.YEAR, "2005")
+                                .withField(StandardField.TITLE, "A title")
+                                .withField(StandardField.JOURNAL, "A")
+                                .withField(StandardField.VOLUME, "21")
+                                .withField(StandardField.PAGES, "334--337")),
+                // duplicate entries
+                Arguments.of(true, new BibEntry(StandardEntryType.Article)
+                                .withField(StandardField.AUTHOR, "Billy Bob")
+                                .withField(StandardField.YEAR, "2005")
+                                .withField(StandardField.TITLE, "A title")
+                                .withField(StandardField.JOURNAL, "A")
+                                .withField(StandardField.NUMBER, "1")
+                                .withField(StandardField.VOLUME, "21")
+                                .withField(StandardField.PAGES, "334--337"),
+                        new BibEntry(StandardEntryType.Article)
+                                .withField(StandardField.AUTHOR, "Billy Bob")
+                                .withField(StandardField.YEAR, "2005")
+                                .withField(StandardField.TITLE, "A title")
+                                .withField(StandardField.JOURNAL, "A")
+                                .withField(StandardField.NUMBER, "1")
+                                .withField(StandardField.VOLUME, "21")
+                                .withField(StandardField.PAGES, "334--337")),
+                // different VOLUME
+                Arguments.of(true, new BibEntry(StandardEntryType.Article)
+                                .withField(StandardField.AUTHOR, "Billy Bob")
+                                .withField(StandardField.YEAR, "2005")
+                                .withField(StandardField.TITLE, "A title")
+                                .withField(StandardField.JOURNAL, "A")
+                                .withField(StandardField.NUMBER, "1")
+                                .withField(StandardField.VOLUME, "21")
+                                .withField(StandardField.PAGES, "334--337"),
+                        new BibEntry(StandardEntryType.Article)
+                                .withField(StandardField.AUTHOR, "Billy Bob")
+                                .withField(StandardField.YEAR, "2005")
+                                .withField(StandardField.TITLE, "A title")
+                                .withField(StandardField.JOURNAL, "A")
+                                .withField(StandardField.NUMBER, "1")
+                                .withField(StandardField.VOLUME, "22")
+                                .withField(StandardField.PAGES, "334--337")),
+                // different VOLUME and JOURNAL
+                Arguments.of(true, new BibEntry(StandardEntryType.Article)
+                                .withField(StandardField.AUTHOR, "Billy Bob")
+                                .withField(StandardField.YEAR, "2005")
+                                .withField(StandardField.TITLE, "A title")
+                                .withField(StandardField.JOURNAL, "A")
+                                .withField(StandardField.NUMBER, "1")
+                                .withField(StandardField.VOLUME, "21")
+                                .withField(StandardField.PAGES, "334--337"),
+                        new BibEntry(StandardEntryType.Article)
+                                .withField(StandardField.AUTHOR, "Billy Bob")
+                                .withField(StandardField.YEAR, "2005")
+                                .withField(StandardField.TITLE, "A title")
+                                .withField(StandardField.JOURNAL, "B")
+                                .withField(StandardField.NUMBER, "1")
+                                .withField(StandardField.VOLUME, "22")
+                                .withField(StandardField.PAGES, "334--337")),
+                // empty JOURNAL
+                Arguments.of(true, new BibEntry(StandardEntryType.Article)
+                                .withField(StandardField.AUTHOR, "Billy Bob")
+                                .withField(StandardField.YEAR, "2005")
+                                .withField(StandardField.TITLE, "A title")
+                                .withField(StandardField.JOURNAL, "")
+                                .withField(StandardField.NUMBER, "1")
+                                .withField(StandardField.VOLUME, "21")
+                                .withField(StandardField.PAGES, "334--337"),
+                        new BibEntry(StandardEntryType.Article)
+                                .withField(StandardField.AUTHOR, "Billy Bob")
+                                .withField(StandardField.YEAR, "2005")
+                                .withField(StandardField.TITLE, "A title")
+                                .withField(StandardField.JOURNAL, "")
+                                .withField(StandardField.NUMBER, "1")
+                                .withField(StandardField.VOLUME, "22")
+                                .withField(StandardField.PAGES, "334--337")),
+                // Different TITLE
+                Arguments.of(false, new BibEntry(StandardEntryType.Article)
+                                .withField(StandardField.AUTHOR, "Billy Bob")
+                                .withField(StandardField.YEAR, "2005")
+                                .withField(StandardField.TITLE, "A title")
+                                .withField(StandardField.JOURNAL, "")
+                                .withField(StandardField.NUMBER, "1")
+                                .withField(StandardField.VOLUME, "21")
+                                .withField(StandardField.PAGES, "334--337"),
+                        new BibEntry(StandardEntryType.Article)
+                                .withField(StandardField.AUTHOR, "Billy Bob")
+                                .withField(StandardField.YEAR, "2005")
+                                .withField(StandardField.TITLE, "Another title")
+                                .withField(StandardField.JOURNAL, "")
+                                .withField(StandardField.NUMBER, "1")
+                                .withField(StandardField.VOLUME, "22")
+                                .withField(StandardField.PAGES, "334--337"))
+        );
+    }
 
-        BibEntry two = new BibEntry(StandardEntryType.Article);
+    @ParameterizedTest
+    @MethodSource("getBibEntryPairs")
+    public void testDuplicateBibEntries(boolean expectedResult, BibEntry entryOne, BibEntry entryTwo) {
+        assertEquals(expectedResult, duplicateChecker.isDuplicate(entryOne, entryTwo, BibDatabaseMode.BIBTEX));
+    }
 
-        one.setField(StandardField.AUTHOR, "Billy Bob");
-        two.setField(StandardField.AUTHOR, "Billy Bob");
-        assertTrue(duplicateChecker.isDuplicate(one, two, BibDatabaseMode.BIBTEX));
+    private static Stream<Arguments> getBibEntryPairsForDuplicateScore() {
+        return Stream.of(
+                // duplicate entries
+                Arguments.of(true, 1.01, 0.01, new BibEntry(StandardEntryType.Article)
+                                .withField(StandardField.AUTHOR, "Billy Bob")
+                                .withField(StandardField.YEAR, "2005")
+                                .withField(StandardField.TITLE, "A title")
+                                .withField(StandardField.JOURNAL, "A"),
+                        new BibEntry(StandardEntryType.Article)
+                                .withField(StandardField.AUTHOR, "Billy Bob")
+                                .withField(StandardField.YEAR, "2005")
+                                .withField(StandardField.TITLE, "A title")
+                                .withField(StandardField.JOURNAL, "A")),
+                // different journal
+                Arguments.of(true, 0.75, 0.01, new BibEntry(StandardEntryType.Article)
+                                .withField(StandardField.AUTHOR, "Billy Bob")
+                                .withField(StandardField.YEAR, "2005")
+                                .withField(StandardField.TITLE, "A title")
+                                .withField(StandardField.JOURNAL, "A"),
+                        new BibEntry(StandardEntryType.Article)
+                                .withField(StandardField.AUTHOR, "Billy Bob")
+                                .withField(StandardField.YEAR, "2005")
+                                .withField(StandardField.TITLE, "A title")
+                                .withField(StandardField.JOURNAL, "B"))
+        );
+    }
 
-        two.setField(StandardField.AUTHOR, "James Joyce");
-        assertFalse(duplicateChecker.isDuplicate(one, two, BibDatabaseMode.BIBTEX));
-
-        two.setField(StandardField.AUTHOR, "Billy Bob");
-        two.setType(StandardEntryType.Book);
-        assertFalse(duplicateChecker.isDuplicate(one, two, BibDatabaseMode.BIBTEX));
-
-        two.setType(StandardEntryType.Article);
-        one.setField(StandardField.YEAR, "2005");
-        two.setField(StandardField.YEAR, "2005");
-        one.setField(StandardField.TITLE, "A title");
-        two.setField(StandardField.TITLE, "A title");
-        one.setField(StandardField.JOURNAL, "A");
-        two.setField(StandardField.JOURNAL, "A");
-        assertTrue(duplicateChecker.isDuplicate(one, two, BibDatabaseMode.BIBTEX));
-        assertEquals(1.01, DuplicateCheck.compareEntriesStrictly(one, two), 0.01);
-
-        two.setField(StandardField.JOURNAL, "B");
-        assertTrue(duplicateChecker.isDuplicate(one, two, BibDatabaseMode.BIBTEX));
-        assertEquals(0.75, DuplicateCheck.compareEntriesStrictly(one, two), 0.01);
-
-        two.setField(StandardField.JOURNAL, "A");
-        one.setField(StandardField.NUMBER, "1");
-        two.setField(StandardField.VOLUME, "21");
-        one.setField(StandardField.PAGES, "334--337");
-        two.setField(StandardField.PAGES, "334--337");
-        assertTrue(duplicateChecker.isDuplicate(one, two, BibDatabaseMode.BIBTEX));
-
-        two.setField(StandardField.NUMBER, "1");
-        one.setField(StandardField.VOLUME, "21");
-        assertTrue(duplicateChecker.isDuplicate(one, two, BibDatabaseMode.BIBTEX));
-
-        two.setField(StandardField.VOLUME, "22");
-        assertTrue(duplicateChecker.isDuplicate(one, two, BibDatabaseMode.BIBTEX));
-
-        two.setField(StandardField.JOURNAL, "B");
-        assertTrue(duplicateChecker.isDuplicate(one, two, BibDatabaseMode.BIBTEX));
-
-        one.setField(StandardField.JOURNAL, "");
-        two.setField(StandardField.JOURNAL, "");
-        assertTrue(duplicateChecker.isDuplicate(one, two, BibDatabaseMode.BIBTEX));
-
-        two.setField(StandardField.TITLE, "Another title");
-        assertFalse(duplicateChecker.isDuplicate(one, two, BibDatabaseMode.BIBTEX));
+    @ParameterizedTest
+    @MethodSource("getBibEntryPairsForDuplicateScore")
+    public void testDuplicateScore(boolean expectedResult, double score, double delta, BibEntry entryOne, BibEntry entryTwo) {
+        assertEquals(expectedResult, duplicateChecker.isDuplicate(entryOne, entryTwo, BibDatabaseMode.BIBTEX));
+        assertEquals(score, DuplicateCheck.compareEntriesStrictly(entryOne, entryTwo), delta);
     }
 
     @Test
