@@ -52,26 +52,16 @@ class FormatterTest {
 
     @ParameterizedTest
     @MethodSource("getFormatters")
-    void getNameReturnsNotNull(Formatter formatter) {
-        assertNotNull(formatter.getName());
-    }
-
-    @ParameterizedTest
-    @MethodSource("getFormatters")
-    void getNameReturnsNotEmpty(Formatter formatter) {
-        assertNotEquals("", formatter.getName());
+    void getNameReturnsNotNullOrEmpty(Formatter formatter) {
+        assertNotNull(formatter.getName()); // not null
+        assertNotEquals("", formatter.getName()); // not empty
     }
 
     @ParameterizedTest
     @MethodSource("getFormatters")
     void getKeyReturnsNotNull(Formatter formatter) {
-        assertNotNull(formatter.getKey());
-    }
-
-    @ParameterizedTest
-    @MethodSource("getFormatters")
-    void getKeyReturnsNotEmpty(Formatter formatter) {
-        assertNotEquals("", formatter.getKey());
+        assertNotNull(formatter.getKey()); // not null
+        assertNotEquals("", formatter.getKey()); // not empty
     }
 
     @ParameterizedTest
