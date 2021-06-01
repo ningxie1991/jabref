@@ -2,9 +2,14 @@ package org.jabref.model.entry;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -701,27 +706,27 @@ public class AuthorListTest {
                         .fixAuthorForAlphabetization("John von Neumann and John Smith and de Black Brown, Jr., Peter"));
     }
 
-    @Test
-    public void testSize() {
+    private static Stream<Arguments> getAuthorList() {
+        return Stream.of(
+                Arguments.of(List.of("")),
+                Arguments.of(List.of("Bar")),
+                Arguments.of(List.of("Foo Bar")),
+                Arguments.of(List.of("Foo von Bar")),
+                Arguments.of(List.of("von Bar, Foo")),
+                Arguments.of(List.of("Bar, Foo")),
+                Arguments.of(List.of("Bar, Jr., Foo")),
+                Arguments.of(List.of("Foo von Bar")),
+                Arguments.of(List.of("John Neumann", "Foo Bar")),
+                Arguments.of(List.of("John von Neumann", "Bar, Jr, Foo")),
+                Arguments.of(List.of("John von Neumann", "John Smith", "Black Brown, Peter")),
+                Arguments.of(List.of("John von Neumann", "Albert Einstein", "Albert Einstein", "Albert Einstein", "Albert Einstein", "Albert Einstein"))
+        );
+    }
 
-        assertEquals(0, AuthorListTest.size(""));
-        assertEquals(1, AuthorListTest.size("Bar"));
-        assertEquals(1, AuthorListTest.size("Foo Bar"));
-        assertEquals(1, AuthorListTest.size("Foo von Bar"));
-        assertEquals(1, AuthorListTest.size("von Bar, Foo"));
-        assertEquals(1, AuthorListTest.size("Bar, Foo"));
-        assertEquals(1, AuthorListTest.size("Bar, Jr., Foo"));
-        assertEquals(1, AuthorListTest.size("Bar, Foo"));
-        assertEquals(2, AuthorListTest.size("John Neumann and Foo Bar"));
-        assertEquals(2, AuthorListTest.size("John von Neumann and Bar, Jr, Foo"));
-
-        assertEquals(3, AuthorListTest.size("John von Neumann and John Smith and Black Brown, Peter"));
-
-        StringBuilder s = new StringBuilder("John von Neumann");
-        for (int i = 0; i < 25; i++) {
-            assertEquals(i + 1, AuthorListTest.size(s.toString()));
-            s.append(" and Albert Einstein");
-        }
+    @ParameterizedTest
+    @MethodSource("getAuthorList")
+    public void testSize(List<String> list) {
+        assertEquals(list.size(), AuthorListTest.size(String.join(" and ", list)));
     }
 
     @Test
