@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -45,10 +46,10 @@ class CitationEntryTest {
         CitationEntry citationEntry1 = new CitationEntry("RefMark", "Context", "Info");
         CitationEntry citationEntry2 = new CitationEntry("RefMark2", "Context", "Info");
         CitationEntry citationEntry3 = new CitationEntry("RefMark", "Other Context", "Other Info");
-        assertEquals(citationEntry1, citationEntry1);
-        assertEquals(citationEntry1, citationEntry3);
-        assertNotEquals(citationEntry1, citationEntry2);
-        assertNotEquals(citationEntry1, "Random String");
+        assertTrue(citationEntry1.equals(citationEntry1));
+        assertTrue(citationEntry1.equals(citationEntry3));
+        assertFalse(citationEntry1.equals(citationEntry2));
+        assertFalse(citationEntry1.equals("Random String"));
     }
 
     @Test
