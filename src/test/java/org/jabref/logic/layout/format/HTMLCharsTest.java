@@ -4,105 +4,85 @@ import org.jabref.logic.layout.LayoutFormatter;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class HTMLCharsTest {
 
-    private LayoutFormatter layout;
+    private LayoutFormatter htmlLayout = new HTMLChars();
 
-    @BeforeEach
-    public void setUp() {
-        layout = new HTMLChars();
+    @ParameterizedTest
+    @MethodSource("formatTests")
+    void paramLayoutFormatTest(String expectedString, String inputString) {
+        assertEquals(expectedString, htmlLayout.format(inputString));
     }
 
-    @Test
-    public void testBasicFormat() {
+    private static Stream<Arguments> formatTests() {
+        return Stream.of(
+                //Basic Formatting Tests
+                Arguments.of("", ""),
+                Arguments.of("hallo", "hallo"),
+                Arguments.of("Réflexions sur le timing de la quantité", "Réflexions sur le timing de la quantité"),
 
-        assertEquals("", layout.format(""));
+                Arguments.of("%%%", "\\%\\%\\%"),
+                Arguments.of("h&aacute;llo", "h\\'allo"),
+                Arguments.of("&imath; &imath;", "\\i \\i"),
+                Arguments.of("&imath;", "\\i"),
+                Arguments.of("&imath;", "\\{i}"),
+                Arguments.of("&imath;&imath;", "\\i\\i"),
 
-        assertEquals("hallo", layout.format("hallo"));
+                Arguments.of("&auml;", "{\\\"{a}}"),
+                Arguments.of("&auml;", "{\\\"a}"),
+                Arguments.of("&auml;", "\\\"a"),
 
-        assertEquals("Réflexions sur le timing de la quantité",
-                layout.format("Réflexions sur le timing de la quantité"));
+                Arguments.of("&Ccedil;", "{\\c{C}}"),
 
-        assertEquals("%%%", layout.format("\\%\\%\\%"));
-        assertEquals("People remember 10%, 20%…Oh Really?", layout.format("{{People remember 10\\%, 20\\%…Oh Really?}}"));
+                Arguments.of("&Oogon;&imath;", "\\k{O}\\i"),
+                Arguments.of("&ntilde; &ntilde; &iacute; &imath; &imath;", "\\~{n} \\~n \\'i \\i \\i"),
 
-        assertEquals("h&aacute;llo", layout.format("h\\'allo"));
+                //Latex Highlighting Tests
+                Arguments.of("<em>hallo</em>", "\\emph{hallo}"),
+                Arguments.of("<em>hallo</em>", "{\\emph hallo}"),
+                Arguments.of("<em>hallo</em>", "{\\em hallo}"),
 
-        assertEquals("&imath; &imath;", layout.format("\\i \\i"));
-        assertEquals("&imath;", layout.format("\\i"));
-        assertEquals("&imath;", layout.format("\\{i}"));
-        assertEquals("&imath;&imath;", layout.format("\\i\\i"));
+                Arguments.of("<i>hallo</i>", "\\textit{hallo}"),
+                Arguments.of("<i>hallo</i>", "{\\textit hallo}"),
+                Arguments.of("<i>hallo</i>", "{\\it hallo}"),
 
-        assertEquals("&auml;", layout.format("{\\\"{a}}"));
-        assertEquals("&auml;", layout.format("{\\\"a}"));
-        assertEquals("&auml;", layout.format("\\\"a"));
+                Arguments.of("<b>hallo</b>", "\\textbf{hallo}"),
+                Arguments.of("<b>hallo</b>", "{\\textbf hallo}"),
+                Arguments.of("<b>hallo</b>", "{\\bf hallo}"),
 
-        assertEquals("&Ccedil;", layout.format("{\\c{C}}"));
+                Arguments.of("<sup>hallo</sup>", "\\textsuperscript{hallo}"),
+                Arguments.of("<sub>hallo</sub>", "\\textsubscript{hallo}"),
 
-        assertEquals("&Oogon;&imath;", layout.format("\\k{O}\\i"));
+                Arguments.of("<u>hallo</u>", "\\underline{hallo}"),
+                Arguments.of("<s>hallo</s>", "\\sout{hallo}"),
+                Arguments.of("<tt>hallo</tt>", "\\texttt{hallo}"),
 
-        assertEquals("&ntilde; &ntilde; &iacute; &imath; &imath;", layout.format("\\~{n} \\~n \\'i \\i \\i"));
-    }
+                //Equations Tests
+                Arguments.of("&dollar;", "\\$"),
+                Arguments.of("&sigma;", "$\\sigma$"),
+                Arguments.of("A 32&nbsp;mA &Sigma;&Delta;-modulator", "A 32~{mA} {$\\Sigma\\Delta$}-modulator"),
 
-    @Test
-    public void testLaTeXHighlighting() {
-        assertEquals("<em>hallo</em>", layout.format("\\emph{hallo}"));
-        assertEquals("<em>hallo</em>", layout.format("{\\emph hallo}"));
-        assertEquals("<em>hallo</em>", layout.format("{\\em hallo}"));
+                //NewLine Tests
+                Arguments.of("a<br>b", "a\nb"),
+                Arguments.of("a<p>b", "a\n\nb"),
 
-        assertEquals("<i>hallo</i>", layout.format("\\textit{hallo}"));
-        assertEquals("<i>hallo</i>", layout.format("{\\textit hallo}"));
-        assertEquals("<i>hallo</i>", layout.format("{\\it hallo}"));
+                //TODO: Add test cases for individual chars..
 
-        assertEquals("<b>hallo</b>", layout.format("\\textbf{hallo}"));
-        assertEquals("<b>hallo</b>", layout.format("{\\textbf hallo}"));
-        assertEquals("<b>hallo</b>", layout.format("{\\bf hallo}"));
+                //TextQuoteSingle Test
+                Arguments.of("&#39;", "{\\textquotesingle}"),
 
-        assertEquals("<sup>hallo</sup>", layout.format("\\textsuperscript{hallo}"));
-        assertEquals("<sub>hallo</sub>", layout.format("\\textsubscript{hallo}"));
-
-        assertEquals("<u>hallo</u>", layout.format("\\underline{hallo}"));
-        assertEquals("<s>hallo</s>", layout.format("\\sout{hallo}"));
-        assertEquals("<tt>hallo</tt>", layout.format("\\texttt{hallo}"));
-    }
-
-    @Test
-    public void testEquations() {
-        assertEquals("&dollar;", layout.format("\\$"));
-        assertEquals("&sigma;", layout.format("$\\sigma$"));
-        assertEquals("A 32&nbsp;mA &Sigma;&Delta;-modulator",
-                layout.format("A 32~{mA} {$\\Sigma\\Delta$}-modulator"));
-    }
-
-    @Test
-    public void testNewLine() {
-        assertEquals("a<br>b", layout.format("a\nb"));
-        assertEquals("a<p>b", layout.format("a\n\nb"));
-    }
-    /*
-     * Is missing a lot of test cases for the individual chars...
-     */
-
-    @Test
-    public void testQuoteSingle() {
-        assertEquals("&#39;", layout.format("{\\textquotesingle}"));
-    }
-
-    @Test
-    public void unknownCommandIsKept() {
-        assertEquals("aaaa", layout.format("\\aaaa"));
-    }
-
-    @Test
-    public void unknownCommandKeepsArgument() {
-        assertEquals("bbbb", layout.format("\\aaaa{bbbb}"));
-    }
-
-    @Test
-    public void unknownCommandWithEmptyArgumentIsKept() {
-        assertEquals("aaaa", layout.format("\\aaaa{}"));
+                //Unknown Commands Tests
+                Arguments.of("aaaa", "\\aaaa"),
+                Arguments.of("bbbb", "\\aaaa{bbbb}"),
+                Arguments.of("aaaa", "\\aaaa{}")
+        );
     }
 }
