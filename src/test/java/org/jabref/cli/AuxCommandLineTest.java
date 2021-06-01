@@ -45,4 +45,19 @@ public class AuxCommandLineTest {
             assertEquals(2, newDB.getEntries().size());
         }
     }
+
+    @Test
+    public void testEmptyDB() throws URISyntaxException, IOException {
+        InputStream emptyStream = AuxCommandLineTest.class.getResourceAsStream(null);
+
+        File auxFile = Path.of(AuxCommandLineTest.class.getResource("paper.aux").toURI()).toFile();
+        try (InputStreamReader originalReader = new InputStreamReader(emptyStream, StandardCharsets.UTF_8)) {
+            ParserResult result = new BibtexParser(importFormatPreferences, new DummyFileUpdateMonitor()).parse(originalReader);
+
+            AuxCommandLine auxCommandLine = new AuxCommandLine(auxFile.getAbsolutePath(), result.getDatabase());
+            BibDatabase newDB = auxCommandLine.perform();
+            assertNotNull(newDB);
+            assertEquals(0, newDB.getEntries().size());
+        }
+    }
 }
